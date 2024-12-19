@@ -1,8 +1,6 @@
 package main
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
@@ -50,7 +48,17 @@ func SaveKey(key Key) (bool, error) {
 		return false, err
 	}
 	fmt.Println(string(keyJson))
-	KeyArr = append(KeyArr, key)
+	path := CONFIG["KMS_STORE"] + "/" + key.KeyMetaData.KeyId + ".key"
+	var mkey = Mk.MasterKey
+	var plainText = []byte(keyJson)
+	var cipherText, er = EncryptAESGCM(mkey, plainText)
+	if er != nil {
+		return false, er
+	}
+	err = os.WriteFile(path, cipherText, 0644)
+	if err != nil {
+		return false, err
+	}
 	return true, nil
 }
 func DeleteKey(keyMetaData KeyMetaData) (bool, error) {
@@ -69,12 +77,22 @@ func DeleteKey(keyMetaData KeyMetaData) (bool, error) {
 	return found, nil
 }
 func (k Key) GetKey(keyId string) (Key, error) {
-	for _, key := range KeyArr {
-		if key.KeyMetaData.KeyId == keyId {
-			return key, nil
-		}
+	path := CONFIG["KMS_STORE"] + "/" + keyId + ".key"
+	fmt.Println(path)
+	f, er := os.ReadFile(path)
+	if er != nil {
+		return Key{}, er
 	}
-	return Key{}, errors.New("Key not found")
+	var mkey = Mk.MasterKey
+	plainText, err := DecryptAESGCM(f, mkey)
+	fmt.Println("err")
+	fmt.Println(err)
+	if err != nil {
+		return Key{}, err
+	}
+	js := json.Unmarshal(plainText, &k)
+	fmt.Println(js)
+	return k, nil
 }
 
 func GenerateAesKey() []byte {
@@ -83,54 +101,12 @@ func GenerateAesKey() []byte {
 	return key
 }
 
-func EncryptAESGCM(key []byte, plainText []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, err
-	}
-	nonce := make([]byte, gcm.NonceSize())
-	if _, err := rand.Read(nonce); err != nil {
-		return nil, err
-	}
-	ciphertext := gcm.Seal(nil, nonce, plainText, nil)
-
-	return append(nonce, ciphertext...), nil
-}
-
-func DecryptAESGCMfunc(ciphertext []byte, key []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, err
-	}
-
-	nonceSize := gcm.NonceSize()
-	if len(ciphertext) < nonceSize {
-		return nil, errors.New("data to decrypt is too small")
-	}
-
-	plaintext, err := gcm.Open(nil, ciphertext[:nonceSize], ciphertext[nonceSize:], nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return plaintext, nil
-}
-
 func (mkp MasterKey) GetMasterKey() []byte {
 	passPhrase := "19@obgtrtdznimtblmaxlhexwxoxehixkhymablikhcxvmtgwtgrhgxxelxvetbfbgzlhblerbgz"
 	if len(passPhrase) < 10 {
 		Exit(fmt.Sprintf("The pass phrase must be at least 10 characters long is only %v characters", len(passPhrase)), 2)
 	}
-	return pbkdf2.Key(mkp.MasterKey, []byte(passPhrase), 4096, 32, sha256.New)
+	return pbkdf2.Key([]byte(passPhrase), []byte{}, 4096, 32, sha256.New)
 }
 func Exit(messages string, errorCode int) {
 	// Exit code and messages based on Nagios plugin return codes (https://nagios-plugins.org/doc/guidelines.html#AEN78)

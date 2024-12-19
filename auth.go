@@ -3,9 +3,10 @@ package main
 import "net/http"
 
 func AuthoriseRequest(h *http.Header) bool {
-	client := h.Get("x-c")
+	client := h.Get("X-Client")
 	authHeader := h.Get("Authorization")
-	hmac := GetHMAC256(&client)
+	var mkp MasterKey
+	hmac := GetHMAC256(client, string(mkp.GetMasterKey()))
 	return hmac == authHeader
 
 }

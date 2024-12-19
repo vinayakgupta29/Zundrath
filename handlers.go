@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -13,9 +15,11 @@ func CreateKeyHandler(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 	}
 
-	CreateKey()
-
-	return c.JSON(http.StatusCreated, KeyArr)
+	k, err := CreateKey()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusCreated, map[string]string{"keyId": k.KeyId})
 }
 
 func DeleteKeyHandler(c echo.Context) error {
@@ -25,15 +29,36 @@ func DeleteKeyHandler(c echo.Context) error {
 }
 
 func GetKeyHandler(c echo.Context) error {
+	auth := AuthoriseRequest(&c.Request().Header)
+	if !auth {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+	}
+
 	keyId := c.QueryParam("keyId")
-	key, err := kProvider.GetKey(keyId)
 	if len(keyId) <= 0 {
 		return c.JSON(http.StatusPartialContent, map[string]string{"error": "Key Not given"})
 	}
+
+	key, err := kProvider.GetKey(keyId)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, err)
+		return c.JSON(http.StatusNotFound, map[string]any{"error": err})
 	}
-	return c.JSON(http.StatusCreated, key)
+	cheader := c.Request().Header.Get("X-Client")
+
+	js, e0 := json.Marshal(key)
+	if e0 != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]any{"error": e0})
+	}
+	encKey, e1 := base64.StdEncoding.DecodeString(CLIENTID[cheader])
+	if e1 != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]any{"error": e1})
+	}
+	k, er := EncryptAESGCM(encKey, js)
+	if er != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]any{"error": er})
+	}
+
+	return c.JSON(http.StatusCreated, k)
 }
 func LogRequestMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {

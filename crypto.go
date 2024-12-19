@@ -1,11 +1,15 @@
 package main
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
+	"errors"
+	"fmt"
 	mathrand "math/rand"
 )
 
@@ -16,11 +20,55 @@ func GetRandomInt(min, max int) int {
 	return mathrand.Intn(max-min) + min
 }
 
-func GetHMAC256(k *string) string {
-	key := *k
-	h := hmac.New(sha256.New, []byte(key))
+func GetHMAC256(k string, message string) string {
+	h := hmac.New(sha256.New, []byte(k))
+	h.Write([]byte(message))
+	fmt.Println(len(h.Sum(nil)))
 	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
-func EncryptAES(key []byte, data []byte) []byte {
-	return data
+
+func EncryptAESGCM(key []byte, plainText []byte) ([]byte, error) {
+	fmt.Println(string(key))
+	fmt.Println(string(plainText))
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("nonce size %v\n", gcm.NonceSize())
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err := rand.Read(nonce); err != nil {
+		return nil, err
+	}
+	ciphertext := gcm.Seal(nil, nonce, plainText, nil)
+	fmt.Println(nonce)
+	fmt.Println(ciphertext)
+	return append(nonce, ciphertext...), nil
+}
+
+func DecryptAESGCM(ciphertext []byte, key []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	nonceSize := gcm.NonceSize()
+	if len(ciphertext) < nonceSize {
+		return nil, errors.New("data to decrypt is too small")
+	}
+
+	plaintext, err := gcm.Open(nil, ciphertext[:nonceSize], ciphertext[nonceSize:], nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return plaintext, nil
 }
