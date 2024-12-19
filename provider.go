@@ -3,7 +3,7 @@ package main
 var encryptedKeyLength = 128
 
 type MasterKey struct {
-	masterKey []byte
+	MasterKey []byte
 }
 
 type KeyMetaData struct {
@@ -14,6 +14,7 @@ type KeyMetaData struct {
 type Key struct {
 	KeyMetaData KeyMetaData `json:"keyMetaData"`
 	Key         []byte      `json:"key"`
+	IV          []byte      `json:"iv"`
 }
 
 type KeyProvider interface {

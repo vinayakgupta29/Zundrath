@@ -1,46 +1,48 @@
 package main
 
 import (
+	"crypto/rand"
 	"fmt"
-	"net/http"
+	"log"
+	"os"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 type User struct {
-	name string `json:name`
-	age  int    `json:age`
-	tree string `json:tree`
+	Name string `json:"name"`
+	Age  int    `json:"age"`
+	Tree string `json:"tree"`
 }
 
-func main() {
-	CreateKey()
-	e := echo.New()
-	u := User{name: "John", age: 20, tree: ""}
-	fmt.Print(u)
-	e.GET("/create", func(c echo.Context) error {
-		if err := c.Bind(&u); err != nil {
-			return err
-		}
-		CreateKey()
+var kProvider Key
 
-		return c.JSON(http.StatusCreated, KeyArr)
-	})
-	e.GET("/delete", func(c echo.Context) error {
-		keyId := c.QueryParam("keyId")
-		DeleteKey(KeyMetaData{KeyId: keyId})
-		return c.JSON(http.StatusCreated, KeyArr)
-	})
-	e.GET("/get", func(c echo.Context) error {
-		keyId := c.QueryParam("keyId")
-		key, err := GetKey(keyId)
-		if len(keyId) <= 0 {
-			return c.JSON(http.StatusPartialContent, "Key Not given")
+func main() {
+	iv := make([]byte, 16)
+	rand.Read(iv)
+	fmt.Println(iv)
+	e := echo.New()
+
+	f, err := os.OpenFile("applogs.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Output: f,
+		Format: "${time_rfc3339} ${status} ${method} ${uri} ${latency} ${error}\n",
+	}))
+	e.Use(middleware.Recover())
+
+	e.Logger.SetOutput(f)
+	e.GET("/create", CreateKeyHandler)
+	e.GET("/delete", DeleteKeyHandler)
+	e.GET("/get", GetKeyHandler)
+	e.HTTPErrorHandler = func(err error, c echo.Context) {
+		if _, ok := err.(*echo.HTTPError); ok {
+			c.JSON(err.(*echo.HTTPError).Code, err.Error())
 		}
-		if err != nil {
-			return c.JSON(http.StatusNotFound, err)
-		}
-		return c.JSON(http.StatusCreated, key)
-	})
+	}
 	e.Logger.Fatal(e.Start(":8080"))
 }
