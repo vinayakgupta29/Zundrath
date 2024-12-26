@@ -47,7 +47,6 @@ func SaveKey(key Key) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	fmt.Println(string(keyJson))
 	path := CONFIG["KMS_STORE"] + "/" + key.KeyMetaData.KeyId + ".key"
 	var mkey = Mk.MasterKey
 	var plainText = []byte(keyJson)
@@ -78,20 +77,19 @@ func DeleteKey(keyMetaData KeyMetaData) (bool, error) {
 }
 func (k Key) GetKey(keyId string) (Key, error) {
 	path := CONFIG["KMS_STORE"] + "/" + keyId + ".key"
-	fmt.Println(path)
 	f, er := os.ReadFile(path)
 	if er != nil {
 		return Key{}, er
 	}
+	// For testing
 	var mkey = Mk.MasterKey
 	plainText, err := DecryptAESGCM(f, mkey)
-	fmt.Println("err")
-	fmt.Println(err)
 	if err != nil {
 		return Key{}, err
 	}
-	js := json.Unmarshal(plainText, &k)
-	fmt.Println(js)
+
+	json.Unmarshal(plainText, &k)
+	// fmt.Println("get_Key_json", js)
 	return k, nil
 }
 

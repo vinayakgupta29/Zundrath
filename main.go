@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/base64"
-	"fmt"
 	"log"
 	"os"
 
@@ -25,14 +23,10 @@ var Mk MasterKey
 func main() {
 	Mk.MasterKey = Mk.GetMasterKey()
 
-	c := "medoceua"
-	fmt.Println(GetHMAC256((c), string(Mk.MasterKey)))
 	os.Mkdir(CONFIG["KMS_STORE"], os.ModePerm)
+
 	e := echo.New()
-	c1, _ := base64.StdEncoding.DecodeString("oLyAz51EAJmTpEI5A+U2lMmqN+YEEOmkyrdqreJk4wmyRlasWOcIX9ABesAHOF+94SEgmHhKK3bm3mVQy8/1X9snTEnBqj4fZBSGdrzarOK5VklVOCaHjwyh9yVT/zq85mh1dSnNiylKdA7qukOcPTkAbkkwxkqpyiAYYQfum3uRFPZhEH5cN/VgufirTC5wawnEcw3D7u2xtiU9S4huMTKguEJelD40SiXnZsGtQTdhR4Bk5mhDwuNiBLuSKXKtph2Htdyrjc/OpJjA5T5UCOI1s1a6oH1VDn3dO0Hhzl4BNQnxLQ==")
-	kee, _ := base64.StdEncoding.DecodeString("xLxZj3QkcyER4X/MEkBE02b9Hdkgcm4ocekjKcpZcGk=")
-	g, _ := DecryptAESGCM([]byte(c1), []byte(kee))
-	fmt.Println(string(g))
+
 	os.Mkdir("logs", os.ModePerm)
 	f, err := os.OpenFile("logs/applogs.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
@@ -47,6 +41,7 @@ func main() {
 	e.Use(middleware.Recover())
 
 	e.Logger.SetOutput(f)
+	e.GET("/", Hello)
 	e.POST("/create", CreateKeyHandler)
 	e.POST("/delete", DeleteKeyHandler)
 	e.POST("/get", GetKeyHandler)
@@ -56,4 +51,5 @@ func main() {
 		}
 	}
 	e.Logger.Fatal(e.Start(":8080"))
+
 }

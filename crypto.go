@@ -23,13 +23,10 @@ func GetRandomInt(min, max int) int {
 func GetHMAC256(k string, message string) string {
 	h := hmac.New(sha256.New, []byte(k))
 	h.Write([]byte(message))
-	fmt.Println(len(h.Sum(nil)))
 	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
 
 func EncryptAESGCM(key []byte, plainText []byte) ([]byte, error) {
-	fmt.Println(string(key))
-	fmt.Println(string(plainText))
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -44,8 +41,6 @@ func EncryptAESGCM(key []byte, plainText []byte) ([]byte, error) {
 		return nil, err
 	}
 	ciphertext := gcm.Seal(nil, nonce, plainText, nil)
-	fmt.Println(nonce)
-	fmt.Println(ciphertext)
 	return append(nonce, ciphertext...), nil
 }
 

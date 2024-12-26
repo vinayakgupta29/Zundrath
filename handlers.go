@@ -3,12 +3,36 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
 )
 
+type RequestBody struct {
+	KeyId string `json:"keyId"`
+}
+
+func Hello(c echo.Context) error {
+
+	headers := c.Request().Header
+	var headersStr string
+
+	// Loop through each header and format them
+	for key, values := range headers {
+		// Format each header key and value as "{key}  : {values} \n"
+		for _, value := range values {
+			headersStr += fmt.Sprintf("%s : %s\n", key, value)
+		}
+	}
+	//xForwardedFor := c.Request().Header.Get("X-Forwarded-For")
+
+	headersStr += fmt.Sprintf("X-Forwarded-For : %s\n", c.Request().RemoteAddr)
+
+	// Return the formatted headers as a response
+	return c.String(http.StatusOK, headersStr)
+}
 func CreateKeyHandler(c echo.Context) error {
 	auth := AuthoriseRequest(&c.Request().Header)
 	if !auth {
@@ -34,7 +58,15 @@ func GetKeyHandler(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 	}
 
-	keyId := c.QueryParam("keyId")
+	var reqBody RequestBody
+
+	// Bind the JSON request body to the struct
+	if err := c.Bind(&reqBody); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
+	}
+
+	keyId := reqBody.KeyId
+
 	if len(keyId) <= 0 {
 		return c.JSON(http.StatusPartialContent, map[string]string{"error": "Key Not given"})
 	}
@@ -57,6 +89,9 @@ func GetKeyHandler(c echo.Context) error {
 	if er != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]any{"error": er})
 	}
+	// For testing
+	// j, _ := DecryptAESGCM(k, encKey)
+	// fmt.Println("j        ", string(j))
 
 	return c.JSON(http.StatusCreated, k)
 }
