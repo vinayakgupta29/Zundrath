@@ -12,7 +12,7 @@ Authour [@vinayakgupta29](https://www.github.com/vinayakgupta29)
 
 #### For the most part you don't have to edit anything in this.
 
-#### Requirements
+## Requirements
 
 ### `Go env setup or Docker setup.`
 
@@ -54,28 +54,45 @@ docker run -p host_port:container_port medoc-kms
 
 #### Create Key
 
-- url : http://<host>/create
-- method : POST
-- Request Header : {
-  "X-Client":<app's name>,
-  "Authorization":<app's associate HMAC>
-  }
-- Response : 200 :
-  <Encrypted base64 Key Data>
+- **URL** : `http://<host>/create`
+- **Method** : `POST`
+- **Request Header** :
+
+```json
+{
+  "X-Client": "<app's name>",
+  "Authorization": "<app's associate HMAC>"
+}
+```
+
+- **Response** :
+  `status`:`200`
+  - **Respons Body** : `<Encrypted base64 Key ID>`
 
 ### Get Key
 
-- url : http://\<host\>/get
-- method : POST
-- Request Header : {
-  "X-Client" : <app's name>,
-  "Authorization": <app's associate HMAC>
-  }
-- Request Body : {
-  'keyId' : \<KeyId of the key to be fetched\>
-  }
-- Response : 200 :
-  <Encrypted base64 Key Data>
+- **URL** : `http://<host>/get`
+- **Method** : `POST`
+- **Request Header** :
+
+```json
+{
+  "X-Client": "<app's name>",
+  "Authorization": "<app's associate HMAC>"
+}
+```
+
+- **Request Body** :
+
+```json
+{
+  "keyId": "<KeyId of the key to be fetched>"
+}
+```
+
+- **Response** :
+  `status`:`200`
+  - **Respons Body** : `<Encrypted base64 Key Data>`
 
 The HMAC for any app can be found in the _main.go_ file with the variable `CLIENTID`
 
