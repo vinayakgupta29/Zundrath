@@ -36,7 +36,7 @@ func main() {
 	defer f.Close()
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Output: f,
-		Format: "${time_rfc3339} ${status} ${method} ${uri} ${remote_ip} ${latency_human} ${error} ${header.x-c} ${header.Authorization}\n",
+		Format: "${time_rfc3339} ${status} ${method} ${uri} ${remote_ip} t=${latency_human} ${error} ${header:X-Client}\n",
 	}))
 	e.Use(middleware.Recover())
 
