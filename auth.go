@@ -7,6 +7,6 @@ func AuthoriseRequest(h *http.Header) bool {
 	authHeader := h.Get("Authorization")
 	var mkp MasterKey
 	hmac := GetHMAC256(client, string(mkp.GetMasterKey()))
-	return hmac == authHeader
+	return hmac == authHeader && hmac == CLIENTID[client]
 
 }

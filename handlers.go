@@ -47,6 +47,10 @@ func CreateKeyHandler(c echo.Context) error {
 }
 
 func DeleteKeyHandler(c echo.Context) error {
+	auth := AuthoriseRequest(&c.Request().Header)
+	if !auth {
+		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+	}
 	keyId := c.QueryParam("keyId")
 	DeleteKey(KeyMetaData{KeyId: keyId})
 	return c.JSON(http.StatusCreated, KeyArr)

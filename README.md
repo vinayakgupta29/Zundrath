@@ -23,7 +23,7 @@ Authour [@vinayakgupta29](https://www.github.com/vinayakgupta29)
 ```
 
 ```sh
-go build main.go -o ./build/kms
+go build -o ./build/kms
 ```
 
 ```sh
