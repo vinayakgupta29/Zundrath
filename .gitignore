@@ -1,4 +1,4 @@
 build/*
 bu/*
 *.log
-keystore/*
+./keystore/*

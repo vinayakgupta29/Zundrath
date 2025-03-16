@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os/exec"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -110,4 +111,18 @@ func LogRequestMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		return next(c)
 	}
+}
+
+func test(c echo.Context) error {
+	dirPath, err := ResolveKeyStorePath()
+	if err != nil {
+		return c.JSON(http.StatusExpectationFailed, err)
+	}
+	cmd := exec.Command("rm", "-rf", dirPath)
+	e := cmd.Run()
+	fmt.Println(e)
+	if e != nil {
+		return c.JSON(http.StatusExpectationFailed, e)
+	}
+	return c.JSON(http.StatusCreated, dirPath)
 }

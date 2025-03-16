@@ -10,7 +10,7 @@ import (
 
 var kProvider Key
 var CONFIG = map[string]string{
-	"KMS_STORE": "keystore",
+	"KMS_STORE": "./keystore",
 }
 var CLIENTID = map[string]string{
 	"medoceua":  "xLxZj3QkcyER4X/MEkBE02b9Hdkgcm4ocekjKcpZcGk=",
@@ -45,6 +45,7 @@ func main() {
 	e.POST("/create", CreateKeyHandler)
 	e.POST("/delete", DeleteKeyHandler)
 	e.POST("/get", GetKeyHandler)
+	e.GET("/test", test)
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
 		if _, ok := err.(*echo.HTTPError); ok {
 			c.JSON(err.(*echo.HTTPError).Code, err.Error())

@@ -2,7 +2,7 @@
 
 this is the KMS (Key Management Service) used by every other application for encryption and decription
 
-# Version : 1.1.1
+# Version : 1.2.0
 
 Authour [@vinayakgupta29](https://www.github.com/vinayakgupta29)
 
