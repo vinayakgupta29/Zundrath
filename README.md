@@ -39,11 +39,11 @@ go build -o ./build/kms
 Setup docker in your system and then clone this repository.
 
 ```sh
-docker build medoc-kms
+docker build go-kms
 ```
 
 ```sh
-docker run -p host_port:container_port medoc-kms
+docker run -p host_port:container_port go-kms
 ```
 
 > [!NOTE]
@@ -60,7 +60,7 @@ docker run -p host_port:container_port medoc-kms
 
 ```json
 {
-  "X-Client": "<app's name>",
+  "X-Client": "<your app's name>",
   "Authorization": "<app's associate HMAC>"
 }
 ```
@@ -77,7 +77,7 @@ docker run -p host_port:container_port medoc-kms
 
 ```json
 {
-  "X-Client": "<app's name>",
+  "X-Client": "<your app's name>",
   "Authorization": "<app's associate HMAC>"
 }
 ```
@@ -94,11 +94,3 @@ docker run -p host_port:container_port medoc-kms
   `status`:`200`
   - **Respons Body** : `<Encrypted base64 Key Data>`
 
-The HMAC for any app can be found in the _main.go_ file with the variable `CLIENTID`
-
-> [!WARNING]
->
-> Don't change the getKey Route to a Get Request. It is the way it is for a reason.
-> If you think you are smart enough to change the working or code in any manner then feel free to do so but if in the meantime you manage to break the working or lead to a security failure then feel free to drop your name below this in the Hall of Fame alongwith No. of hours wasted.
-
-# Hall of Fame
