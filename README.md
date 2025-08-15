@@ -1,6 +1,6 @@
 # Zundrath
 
-this is the KMS (Key Management Service) used by every other application for encryption and decription
+this is the KMS (Key Management Service) used by any application for generating, storing and fetching symmetric encryption and decription keys
 
 # Version : 1.2.0
 
